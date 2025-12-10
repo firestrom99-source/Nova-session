@@ -2,388 +2,1090 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Nova-session | ChatGPT Log Archive</title>
+  <title>Nova-session · Private log vault</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
   <style>
     :root {
-      color-scheme: dark light;
-      --bg: #050712;
-      --card: #111827;
+      --bg: #020617;
+      --bg-elevated: #020617;
+      --card: rgba(15, 23, 42, 0.96);
+      --card-soft: rgba(15, 23, 42, 0.85);
       --accent: #38bdf8;
-      --accent-soft: rgba(56, 189, 248, 0.15);
+      --accent-soft: rgba(56, 189, 248, 0.16);
+      --accent-strong: #0ea5e9;
+      --accent-2: #a855f7;
+      --accent-2-soft: rgba(168, 85, 247, 0.2);
       --text: #e5e7eb;
-      --muted: #9ca3af;
-      --border: #1f2937;
-      --danger: #f97373;
-      --success: #4ade80;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --text-soft: #9ca3af;
+      --border-subtle: rgba(148, 163, 184, 0.25);
+      --chip-bg: rgba(15, 23, 42, 0.9);
+      --danger: #fb7185;
+      --font-main: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      --radius-lg: 18px;
+      --radius-xl: 22px;
+      --radius-full: 999px;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.85);
+      --shadow-subtle: 0 14px 30px rgba(15, 23, 42, 0.7);
     }
 
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
     }
 
     body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: var(--sans);
-      background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+      font-family: var(--font-main);
+      background: radial-gradient(
+          circle at top left,
+          rgba(56, 189, 248, 0.16),
+          transparent 55%
+        ),
+        radial-gradient(
+          circle at bottom right,
+          rgba(168, 85, 247, 0.16),
+          transparent 55%
+        ),
+        radial-gradient(
+          circle at top right,
+          rgba(248, 250, 252, 0.06),
+          transparent 55%
+        ),
+        var(--bg);
       color: var(--text);
-      display: flex;
-      justify-content: center;
-      padding: 32px 16px 48px;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .shell {
-      width: 100%;
-      max-width: 960px;
+    .page-shell {
+      max-width: 1120px;
+      margin: 32px auto 40px;
+      padding: 0 20px 40px;
+      position: relative;
+    }
+
+    .page-shell::before {
+      content: "";
+      position: fixed;
+      inset: -120px;
+      background: radial-gradient(
+          circle at top left,
+          rgba(56, 189, 248, 0.14),
+          transparent 60%
+        ),
+        radial-gradient(
+          circle at bottom right,
+          rgba(168, 85, 247, 0.18),
+          transparent 60%
+        );
+      opacity: 0.45;
+      filter: blur(50px);
+      z-index: -2;
+    }
+
+    .page-shell::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(
+          circle at center,
+          rgba(15, 23, 42, 0.55),
+          rgba(15, 23, 42, 0.92)
+        ),
+        radial-gradient(circle at top center, rgba(30, 64, 175, 0.7), transparent);
+      mix-blend-mode: multiply;
+      opacity: 0.95;
+      z-index: -1;
     }
 
     header {
-      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 28px;
     }
 
-    .badge {
+    .eyebrow-chip {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 3px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.85);
+      gap: 8px;
+      padding: 5px 11px;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: radial-gradient(
+          circle at top left,
+          rgba(56, 189, 248, 0.42),
+          transparent 55%
+        ),
+        rgba(15, 23, 42, 0.94);
+      box-shadow: 0 14px 45px rgba(56, 189, 248, 0.45);
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
+      letter-spacing: 0.16em;
+      color: #e0f2fe;
+      max-width: fit-content;
     }
 
-    .badge-dot {
+    .eyebrow-dot {
       width: 7px;
       height: 7px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 0 5px var(--accent-soft);
+      border-radius: 99px;
+      background: radial-gradient(circle at 30% 30%, #f9fafb, #22c55e);
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2),
+        0 0 20px rgba(34, 197, 94, 0.9);
+    }
+
+    .eyebrow-label {
+      opacity: 0.9;
+    }
+
+    .eyebrow-meta {
+      opacity: 0.65;
+      font-weight: 500;
+    }
+
+    .title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 10px;
     }
 
     h1 {
-      margin: 10px 0 6px;
-      font-size: clamp(28px, 4vw, 36px);
+      font-size: clamp(32px, 4vw, 40px);
+      font-weight: 720;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #f9fafb;
+      text-shadow: 0 18px 45px rgba(15, 23, 42, 0.95),
+        0 0 30px rgba(56, 189, 248, 0.38);
+    }
+
+    .title-badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.38);
+      background: radial-gradient(
+          circle at top left,
+          rgba(56, 189, 248, 0.18),
+          transparent 50%
+        ),
+        rgba(15, 23, 42, 0.96);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #e5e7eb;
     }
 
     .subtitle {
-      margin: 0;
-      color: var(--muted);
+      margin-top: 5px;
+      max-width: 640px;
       font-size: 14px;
-      max-width: 560px;
+      color: var(--text-soft);
+      line-height: 1.5;
     }
 
-    main {
+    .main-grid {
       display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1.35fr);
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2.3fr);
       gap: 20px;
+      align-items: flex-start;
     }
 
-    @media (max-width: 800px) {
-      main {
+    @media (max-width: 880px) {
+      .main-grid {
         grid-template-columns: minmax(0, 1fr);
       }
     }
 
     .card {
-      border-radius: 18px;
-      border: 1px solid var(--border);
-      background: linear-gradient(145deg, rgba(15,23,42,0.95), rgba(15,23,42,0.7));
-      padding: 16px 18px 18px;
-      box-shadow:
-        0 18px 45px rgba(0,0,0,0.7),
-        0 0 0 0.5px rgba(148,163,184,0.12);
+      border-radius: var(--radius-xl);
+      background: radial-gradient(
+          circle at top center,
+          rgba(15, 23, 42, 0.95),
+          rgba(15, 23, 42, 0.96)
+        ),
+        linear-gradient(
+          135deg,
+          rgba(15, 23, 42, 0.95),
+          rgba(15, 23, 42, 0.96)
+        );
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      box-shadow: var(--shadow-soft);
+      padding: 16px 18px 16px;
+      position: relative;
+      overflow: hidden;
     }
 
-    .card-title {
-      font-size: 15px;
-      margin: 0 0 6px;
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(
+        circle at top center,
+        rgba(56, 189, 248, 0.18),
+        transparent 60%
+      );
+      opacity: 0.2;
+      pointer-events: none;
     }
 
-    .card-sub {
-      margin: 0 0 12px;
-      font-size: 12px;
-      color: var(--muted);
+    .card-inner {
+      position: relative;
+      z-index: 1;
     }
 
-    .pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
-
-    .pill {
-      font-size: 11px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.35);
-      background: rgba(15,23,42,0.8);
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .pill.accent {
-      border-color: rgba(56,189,248,0.7);
-      background: radial-gradient(circle at top, rgba(56,189,248,0.15), rgba(15,23,42,0.9));
-      color: var(--accent);
-    }
-
-    .log-list {
-      display: grid;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      font-size: 13px;
-    }
-
-    .log-item {
-      padding: 7px 9px;
-      border-radius: 10px;
-      border: 1px solid rgba(31,41,55,0.9);
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      background: radial-gradient(circle at top left, rgba(56,189,248,0.08), rgba(15,23,42,0.9));
-    }
-
-    .log-head {
+    .section-heading-row {
       display: flex;
       justify-content: space-between;
-      gap: 10px;
       align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
     }
 
-    .log-name {
-      font-family: var(--mono);
+    .section-title {
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #cbd5f5;
+      opacity: 0.95;
+    }
+
+    .section-subtitle {
+      font-size: 12px;
+      color: var(--text-soft);
+      opacity: 0.9;
+    }
+
+    .badge-secondary {
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.45);
       font-size: 11px;
       color: #e5e7eb;
-      word-break: break-all;
+      background: radial-gradient(
+          circle at top left,
+          rgba(168, 85, 247, 0.26),
+          transparent 55%
+        ),
+        rgba(15, 23, 42, 0.96);
     }
 
-    .log-meta {
-      font-size: 11px;
-      color: var(--muted);
+    .session-list {
       display: flex;
+      flex-direction: column;
       gap: 10px;
+      margin-top: 6px;
+    }
+
+    .session-item {
+      border-radius: 15px;
+      padding: 11px 11px 11px;
+      background: radial-gradient(
+          circle at top left,
+          rgba(15, 23, 42, 0.96),
+          rgba(15, 23, 42, 0.95)
+        ),
+        rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(71, 85, 105, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.14s ease-out, box-shadow 0.14s ease-out,
+        border-color 0.14s ease-out, background 0.14s ease-out;
+    }
+
+    .session-item::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        135deg,
+        rgba(56, 189, 248, 0.08),
+        rgba(168, 85, 247, 0.04)
+      );
+      opacity: 0;
+      transition: opacity 0.16s ease-out;
+      pointer-events: none;
+    }
+
+    .session-item:hover {
+      transform: translateY(-2px) translateZ(0);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.95);
+      border-color: rgba(56, 189, 248, 0.7);
+      background: radial-gradient(
+        circle at top left,
+        rgba(15, 23, 42, 0.97),
+        rgba(15, 23, 42, 0.98)
+      );
+    }
+
+    .session-item:hover::before {
+      opacity: 1;
+    }
+
+    .session-main-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
       align-items: center;
-      flex-wrap: wrap;
     }
 
-    .dot {
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--border);
+    .session-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
     }
 
-    .tag {
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      border: 1px solid rgba(56,189,248,0.5);
-      color: var(--accent);
-      background: rgba(15,23,42,0.9);
+    .session-title-row {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 8px;
+      min-width: 0;
     }
 
-    .log-desc {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .small {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .kbd {
-      font-family: var(--mono);
-      font-size: 11px;
-      padding: 2px 5px;
-      border-radius: 6px;
-      border: 1px solid rgba(148,163,184,0.6);
-      background: rgba(15,23,42,0.9);
-    }
-
-    .section-heading {
+    .session-filename {
       font-size: 13px;
-      margin: 0 0 6px;
+      font-weight: 550;
+      color: #e5e7eb;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
 
-    .steps {
-      margin: 0;
-      padding-left: 18px;
+    .session-date-chip {
+      font-size: 11px;
+      color: #9ca3af;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      background: radial-gradient(
+          circle at top left,
+          rgba(15, 23, 42, 0.98),
+          rgba(15, 23, 42, 0.96)
+        ),
+        rgba(15, 23, 42, 0.98);
+    }
+
+    .session-desc {
       font-size: 12px;
-      color: var(--muted);
+      color: var(--text-soft);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
 
-    .steps li {
-      margin-bottom: 4px;
+    .session-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 1px;
     }
 
-    .status-dot {
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      font-size: 11px;
+      color: #9ca3af;
+      background: rgba(15, 23, 42, 0.92);
+    }
+
+    .meta-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.95);
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(56, 189, 248, 0.75);
+      color: #e0f2fe;
+    }
+
+    .tag-pill span {
+      font-size: 14px;
+    }
+
+    .session-link {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+
+    .session-link a {
+      position: absolute;
+      inset: 0;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .session-empty {
+      padding: 12px 11px;
+      border-radius: 15px;
+      border: 1px dashed rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.9);
+      font-size: 12px;
+      color: var(--text-soft);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .session-empty-dot {
       width: 7px;
       height: 7px;
       border-radius: 999px;
-      background: var(--success);
-      box-shadow: 0 0 0 3px rgba(74,222,128,0.25);
+      background: rgba(148, 163, 184, 0.95);
+      opacity: 0.85;
     }
 
-    .status-row {
+    .session-error {
+      padding: 12px 11px;
+      border-radius: 15px;
+      border: 1px solid rgba(248, 113, 113, 0.85);
+      background: rgba(30, 64, 175, 0.25);
+      font-size: 12px;
+      color: #fecaca;
       display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .session-error-icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .session-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      gap: 10px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .status-pill {
+      display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 11px;
-      color: var(--muted);
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.55);
+      background: rgba(15, 23, 42, 0.96);
+    }
+
+    .status-pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.35);
+    }
+
+    .status-pill-label {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 500;
+    }
+
+    .status-pill-mode {
+      opacity: 0.75;
+    }
+
+    .status-right {
+      opacity: 0.8;
+    }
+
+    .card-secondary {
+      background: radial-gradient(
+          circle at top center,
+          rgba(15, 23, 42, 0.99),
+          rgba(15, 23, 42, 0.97)
+        ),
+        linear-gradient(
+          145deg,
+          rgba(15, 23, 42, 0.98),
+          rgba(15, 23, 42, 0.96)
+        );
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      padding: 16px 18px 16px;
+      box-shadow: var(--shadow-subtle);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-secondary::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(
+          circle at top left,
+          rgba(56, 189, 248, 0.32),
+          transparent 55%
+        ),
+        radial-gradient(
+          circle at bottom right,
+          rgba(168, 85, 247, 0.26),
+          transparent 60%
+        );
+      opacity: 0.4;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .card-secondary-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .how-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
       margin-bottom: 10px;
+    }
+
+    .how-title {
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .step-badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid rgba(56, 189, 248, 0.8);
+      color: #e0f2fe;
+      background: rgba(15, 23, 42, 0.96);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .step-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.85);
+    }
+
+    .how-subtitle {
+      font-size: 12px;
+      color: var(--text-soft);
+      margin-bottom: 12px;
+    }
+
+    .how-section {
+      margin-bottom: 12px;
+    }
+
+    .how-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #cbd5f5;
+      margin-bottom: 6px;
+    }
+
+    .how-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .how-list li {
+      padding-left: 14px;
+      position: relative;
+    }
+
+    .how-list li::before {
+      content: "•";
+      position: absolute;
+      left: 2px;
+      top: 0;
+      color: rgba(148, 163, 184, 0.9);
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      padding: 1px 4px;
+      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      color: #e5e7eb;
+    }
+
+    .quick-links {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+
+    .quick-links a {
+      color: #bae6fd;
+      text-decoration: none;
+    }
+
+    .quick-links a:hover {
+      text-decoration: underline;
     }
 
     footer {
       margin-top: 18px;
       font-size: 11px;
-      color: var(--muted);
+      color: #9ca3af;
       display: flex;
       justify-content: space-between;
       flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .footer-left {
+      display: inline-flex;
+      align-items: center;
       gap: 6px;
     }
 
-    a {
-      color: var(--accent);
-      text-decoration: none;
+    .footer-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #38bdf8, #a855f7);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.28),
+        0 0 16px rgba(168, 85, 247, 0.7);
     }
 
-    a:hover {
-      text-decoration: underline;
+    .footer-right {
+      opacity: 0.8;
+    }
+
+    .pill-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.96);
+      font-size: 11px;
+      color: #e5e7eb;
+    }
+
+    .pill-inline span {
+      font-size: 15px;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(4px);
+      animation: fadeInUp 0.35s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .card,
+      .card-secondary {
+        padding: 14px 13px 14px;
+      }
+
+      .session-item {
+        padding: 9px 9px 9px;
+      }
+
+      .session-status-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
+
 <body>
-  <div class="shell">
-    <header>
-      <span class="badge">
-        <span class="badge-dot"></span>
-        Nova-session · private vault
-      </span>
-      <h1>Nova-session</h1>
+  <div class="page-shell">
+    <header class="fade-in" style="animation-delay:0.05s">
+      <div class="eyebrow-chip">
+        <span class="eyebrow-dot"></span>
+        <span class="eyebrow-label">Nova-session · Private vault</span>
+        <span class="eyebrow-meta">firestrom99-source</span>
+      </div>
+      <div class="title-row">
+        <h1>Nova-session</h1>
+        <span class="title-badge">Personal chat log archive</span>
+      </div>
       <p class="subtitle">
-        Personal chat log archive for Nova × Aetherion sessions.  
-        This site is just a visual index; raw logs live inside the repository.
+        Private log vault for Nova × Aetherion sessions. This site is just a visual
+        index; the raw chat logs live directly as files inside the
+        <span class="mono">Nova-session</span> repository.
       </p>
     </header>
 
-    <main>
-      <!-- LEFT: sample log index -->
-      <section class="card">
-        <div class="status-row">
-          <span class="status-dot"></span>
-          <span>Archive pipeline status: <strong>manual upload</strong></span>
+    <main class="main-grid">
+      <!-- Left: auto-generated session index -->
+      <section class="card fade-in" style="animation-delay:0.12s">
+        <div class="card-inner">
+          <div class="section-heading-row">
+            <div>
+              <div class="section-title">Session index</div>
+              <div class="section-subtitle">
+                New <span class="mono">.txt</span> / <span class="mono">.md</span> files in the
+                repo appear here automatically.
+              </div>
+            </div>
+            <div class="badge-secondary">
+              Auto-index · GitHub API
+            </div>
+          </div>
+
+          <div id="session-list" class="session-list">
+            <!-- JS will inject session cards here -->
+            <div class="session-empty" id="session-placeholder">
+              <div class="session-empty-dot"></div>
+              <div>
+                Loading session list from <span class="mono">firestrom99-source/Nova-session</span>…
+              </div>
+            </div>
+          </div>
+
+          <div class="session-status-row">
+            <div class="status-pill">
+              <span class="status-pill-dot"></span>
+              <span class="status-pill-label">Archive pipeline</span>
+              <span class="status-pill-mode">Manual upload</span>
+            </div>
+            <div class="status-right">
+              Export from ChatGPT → save as <span class="mono">.md</span>/<span class="mono">.txt</span> →
+              upload to repo → it shows up here.
+            </div>
+          </div>
         </div>
-
-        <h2 class="card-title">Session index (examples)</h2>
-        <p class="card-sub">
-          These are only placeholders. Replace them later with real links / files when logs are uploaded.
-        </p>
-
-        <ul class="log-list">
-          <li class="log-item">
-            <div class="log-head">
-              <span class="log-name">2025-12-09_nova_monitor-shopping.md</span>
-              <span class="tag">hardware-notes</span>
-            </div>
-            <div class="log-meta">
-              <span>🕒 2h 14m</span>
-              <span class="dot"></span>
-              <span>portable monitor comparison, 10.5&quot; vs 13.3&quot; vs 15.6&quot;</span>
-            </div>
-          </li>
-
-          <li class="log-item">
-            <div class="log-head">
-              <span class="log-name">2025-12-08_nova_audio-cable-lab.md</span>
-              <span class="tag">audio-gear</span>
-            </div>
-            <div class="log-meta">
-              <span>🕒 1h 03m</span>
-              <span class="dot"></span>
-              <span>784-core vs 200-core cable, material notes</span>
-            </div>
-          </li>
-
-          <li class="log-item">
-            <div class="log-head">
-              <span class="log-name">2025-12-07_nova_worldbuilding-notes.md</span>
-              <span class="tag">novel</span>
-            </div>
-            <p class="log-desc">
-              Worldbuilding notes for NOVA Blueprint, Chakrapattanawong / Luminarch line, and session metadata.
-            </p>
-          </li>
-        </ul>
-
-        <p class="small" style="margin-top:10px;">
-          🔧 To change this index, edit <span class="kbd">index.html</span> in the
-          <a href="https://github.com/firestrom99-source/Nova-session" target="_blank" rel="noreferrer">GitHub repository</a>.
-        </p>
       </section>
 
-      <!-- RIGHT: how-to + naming rules -->
-      <aside class="card">
-        <h2 class="card-title">How this archive works</h2>
-        <p class="card-sub">
-          Minimal workflow for saving ChatGPT logs into this repo.
-        </p>
+      <!-- Right: how it works / instructions -->
+      <aside class="card-secondary fade-in" style="animation-delay:0.18s">
+        <div class="card-secondary-inner">
+          <div class="how-title-row">
+            <div class="how-title">How this archive works</div>
+            <div class="step-badge">
+              <span class="step-dot"></span>
+              Step 0 · Manual mode
+            </div>
+          </div>
 
-        <div class="pill-row">
-          <span class="pill accent">Step 0 · manual mode</span>
-          <span class="pill">Future: auto-sync via script</span>
-          <span class="pill">Private repo</span>
+          <p class="how-subtitle">
+            Minimal workflow for saving Nova × Aetherion logs into this vault.
+            Everything lives in a single private repository; this page is only a
+            read-only index.
+          </p>
+
+          <div class="how-section">
+            <div class="how-section-title">Basic workflow</div>
+            <ul class="how-list">
+              <li>Export / copy a chat from ChatGPT.</li>
+              <li>
+                Save it locally as
+                <span class="mono">YYYY-MM-DD_topic-or-tag.md</span>
+                or <span class="mono">.txt</span>.
+              </li>
+              <li>Upload the file into this repository (web upload is fine).</li>
+              <li>
+                The filename is parsed and appears in the <strong>Session
+                  index</strong> list automatically.
+              </li>
+            </ul>
+          </div>
+
+          <div class="how-section">
+            <div class="how-section-title">File naming convention</div>
+            <ul class="how-list">
+              <li>
+                Suggested pattern:
+                <span class="mono">YYYY-MM-DD_topic-or-tag.md</span>
+              </li>
+              <li>
+                Example:
+                <span class="mono">2025-12-09_monitor-shopping.md</span>
+              </li>
+              <li>
+                If the name doesn’t follow this pattern (e.g.
+                <span class="mono">nova ep.1 การระบุนอนอันตราย.txt</span>) it still
+                appears — just without a parsed date/tag.
+              </li>
+            </ul>
+            <p class="hint">
+              Best practice: use English slugs with <span class="mono">_</span> or
+              <span class="mono">-</span> between words for nicer formatting.
+            </p>
+          </div>
+
+          <div class="how-section">
+            <div class="how-section-title">Quick links</div>
+            <div class="quick-links">
+              <div>
+                <span class="pill-inline">
+                  <span>⬤</span> GitHub Repo
+                </span>
+                &nbsp;→&nbsp;
+                <a href="https://github.com/firestrom99-source/Nova-session"
+                  target="_blank" rel="noreferrer">
+                  firestrom99-source/Nova-session
+                </a>
+              </div>
+              <div>
+                <span class="pill-inline">
+                  <span>★</span> Profile
+                </span>
+                &nbsp;→&nbsp;
+                <a
+                  href="https://github.com/firestrom99-source"
+                  target="_blank"
+                  rel="noreferrer"
+                  >firestrom99-source</a
+                >
+              </div>
+            </div>
+          </div>
         </div>
-
-        <h3 class="section-heading">File naming convention</h3>
-        <p class="small">
-          Suggested pattern:
-        </p>
-        <p class="small">
-          <span class="kbd">YYYY-MM-DD_topic-or-tag.md</span>
-        </p>
-        <ul class="steps">
-          <li><strong>YYYY-MM-DD</strong> — date of the session</li>
-          <li><strong>topic-or-tag</strong> — short keyword like <span class="kbd">monitor-shopping</span>,
-            <span class="kbd">audio-cable-lab</span>, <span class="kbd">novel-notes</span>
-          </li>
-        </ul>
-
-        <h3 class="section-heading" style="margin-top:10px;">Basic workflow</h3>
-        <ol class="steps">
-          <li>Export / copy a chat from ChatGPT.</li>
-          <li>Save it locally as <span class="kbd">.md</span> or <span class="kbd">.txt</span>.</li>
-          <li>Upload the file to this repo (via <strong>Add file → Upload files</strong>).</li>
-          <li>Optionally, update the list on this page to reference the new file.</li>
-        </ol>
-
-        <h3 class="section-heading" style="margin-top:10px;">Quick links</h3>
-        <ul class="steps">
-          <li><a href="https://github.com/firestrom99-source/Nova-session" target="_blank" rel="noreferrer">
-            GitHub repository
-          </a></li>
-          <li><a href="https://github.com/firestrom99-source" target="_blank" rel="noreferrer">
-            firestrom99-source profile
-          </a></li>
-        </ul>
       </aside>
     </main>
 
-    <footer>
-      <span>🧠 Nova × Aetherion · private log vault</span>
-      <span>Hosted on GitHub Pages</span>
+    <footer class="fade-in" style="animation-delay:0.24s">
+      <div class="footer-left">
+        <div class="footer-dot"></div>
+        <span>Nova × Aetherion · private log vault</span>
+      </div>
+      <div class="footer-right">
+        Hosted on GitHub Pages ·
+        <span class="mono">main</span> branch ·
+        <span class="mono">/Nova-session</span>
+      </div>
     </footer>
   </div>
+
+  <!-- Auto-index script -->
+  <script>
+    const REPO_OWNER = "firestrom99-source";
+    const REPO_NAME = "Nova-session";
+    const BRANCH = "main";
+
+    const sessionListEl = document.getElementById("session-list");
+    const placeholderEl = document.getElementById("session-placeholder");
+
+    function parseSessionMeta(filename) {
+      const dotIndex = filename.lastIndexOf(".");
+      const base = dotIndex > 0 ? filename.slice(0, dotIndex) : filename;
+
+      const pattern = /^(\d{4})-(\d{2})-(\d{2})[_-](.+)$/;
+      const match = base.match(pattern);
+
+      if (match) {
+        const [_, year, month, day, slug] = match;
+        const date = `${year}-${month}-${day}`;
+        const topicRaw = slug.replace(/[_-]+/g, " ").trim();
+        const topic = topicRaw || "Chat session";
+
+        // Optional: derive a simple tag from the first word
+        const firstWord = topicRaw.split(" ")[0] || "session";
+
+        return {
+          date,
+          topic,
+          tag: firstWord.toLowerCase(),
+        };
+      }
+
+      return {
+        date: null,
+        topic: base,
+        tag: null,
+      };
+    }
+
+    function createSessionItem(file) {
+      const meta = parseSessionMeta(file.name);
+
+      const item = document.createElement("div");
+      item.className = "session-item";
+
+      const humanName = meta.topic || file.name;
+
+      let dateChip = "";
+      if (meta.date) {
+        dateChip = `<span class="session-date-chip">${meta.date}</span>`;
+      }
+
+      let tagChip = "";
+      if (meta.tag) {
+        tagChip = `
+          <span class="tag-pill">
+            <span>#</span>${meta.tag}
+          </span>
+        `;
+      }
+
+      item.innerHTML = `
+        <div class="session-main-row">
+          <div class="session-title-block">
+            <div class="session-title-row">
+              <div class="session-filename" title="${file.name}">
+                ${humanName}
+              </div>
+              ${dateChip}
+            </div>
+            <div class="session-meta-row">
+              <div class="meta-pill">
+                <span class="meta-dot"></span>
+                <span>${file.name}</span>
+              </div>
+              ${tagChip}
+            </div>
+          </div>
+        </div>
+        <div class="session-link">
+          <a href="${encodeURIComponent(file.name)}"></a>
+        </div>
+      `;
+
+      return item;
+    }
+
+    async function loadSessions() {
+      try {
+        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/?ref=${BRANCH}`;
+        const res = await fetch(url, {
+          headers: {
+            Accept: "application/vnd.github.v3+json",
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`GitHub API error: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        // Filter only .md / .txt files, ignore index.html & README
+        let files = data.filter((item) => {
+          const nameLower = item.name.toLowerCase();
+          const isText =
+            nameLower.endsWith(".md") || nameLower.endsWith(".txt");
+          const isIndex = nameLower === "index.html";
+          const isReadme = nameLower === "readme.md";
+          return isText && !isIndex && !isReadme;
+        });
+
+        // Sort newest-like first: try by parsed date, fallback to name
+        files = files
+          .map((f) => {
+            const meta = parseSessionMeta(f.name);
+            return { file: f, meta };
+          })
+          .sort((a, b) => {
+            if (a.meta.date && b.meta.date) {
+              // Descending by date
+              return a.meta.date < b.meta.date ? 1 : -1;
+            }
+            if (a.meta.date && !b.meta.date) return -1;
+            if (!a.meta.date && b.meta.date) return 1;
+            // Fallback: reverse alphabetical
+            return a.file.name < b.file.name ? 1 : -1;
+          })
+          .map((pair) => pair.file);
+
+        if (placeholderEl) {
+          placeholderEl.remove();
+        }
+
+        if (!files.length) {
+          const empty = document.createElement("div");
+          empty.className = "session-empty";
+          empty.innerHTML = `
+            <div class="session-empty-dot"></div>
+            <div>
+              No sessions found yet. Upload a <span class="mono">.md</span> or
+              <span class="mono">.txt</span> log file to the repository and it will
+              show up here automatically.
+            </div>
+          `;
+          sessionListEl.appendChild(empty);
+          return;
+        }
+
+        files.forEach((file) => {
+          const item = createSessionItem(file);
+          sessionListEl.appendChild(item);
+        });
+      } catch (err) {
+        console.error(err);
+        if (placeholderEl) {
+          placeholderEl.remove();
+        }
+        const errBox = document.createElement("div");
+        errBox.className = "session-error";
+        errBox.innerHTML = `
+          <div class="session-error-icon">⚠️</div>
+          <div>
+            Unable to load session list from GitHub right now.
+            You can still access files directly in the repository:
+            <br />
+            <a href="https://github.com/${REPO_OWNER}/${REPO_NAME}"
+               target="_blank" rel="noreferrer"
+               style="color:#bae6fd;text-decoration:none;">
+              github.com/${REPO_OWNER}/${REPO_NAME}
+            </a>
+          </div>
+        `;
+        sessionListEl.appendChild(errBox);
+      }
+    }
+
+    loadSessions();
+  </script>
 </body>
 </html>
